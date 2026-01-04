@@ -33,12 +33,15 @@ export class LoginComponent {
   });
 
   constructor(private authService: AuthService,
-              private fb: FormBuilder,
-              private router: Router,
-              private sessionService: SessionService) {
+    private fb: FormBuilder,
+    private router: Router,
+    private sessionService: SessionService) {
   }
 
   public submit(): void {
+    if (this.form.invalid) {
+      return;
+    }
     const loginRequest = this.form.value as LoginRequest;
     this.authService.login(loginRequest).subscribe({
       next: (response: SessionInformation) => {
