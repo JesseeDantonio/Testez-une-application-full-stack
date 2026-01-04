@@ -9,10 +9,18 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { expect } from '@jest/globals';
 
 import { RegisterComponent } from './register.component';
+import { Router } from '@angular/router';
+import { SessionService } from 'src/app/services/session.service';
+import { AuthService } from '../../services/auth.service';
+import { LoginComponent } from '../login/login.component';
+import { of } from 'rxjs';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
   let fixture: ComponentFixture<RegisterComponent>;
+  let authService: jest.Mocked<AuthService>;
+  let router: jest.Mocked<Router>;
+  let sessionService: jest.Mocked<SessionService>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -20,7 +28,7 @@ describe('RegisterComponent', () => {
       imports: [
         BrowserAnimationsModule,
         HttpClientModule,
-        ReactiveFormsModule,  
+        ReactiveFormsModule,
         MatCardModule,
         MatFormFieldModule,
         MatIconModule,
@@ -28,6 +36,23 @@ describe('RegisterComponent', () => {
       ]
     })
       .compileComponents();
+  });
+
+  beforeEach(() => {
+    // Crée des mocks pour les services
+    authService = { login: jest.fn() } as any;
+    router = { navigate: jest.fn() } as any;
+    sessionService = { logIn: jest.fn() } as any;
+
+    TestBed.configureTestingModule({
+      imports: [ReactiveFormsModule],
+      declarations: [LoginComponent],
+      providers: [
+        { provide: AuthService, useValue: authService },
+        { provide: Router, useValue: router },
+        { provide: SessionService, useValue: sessionService },
+      ]
+    });
 
     fixture = TestBed.createComponent(RegisterComponent);
     component = fixture.componentInstance;
@@ -37,4 +62,11 @@ describe('RegisterComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should not submit if the form is invalid', () => {
+    component.form.setValue({ email: '', password: '', firstName: '', lastName: '' });
+    component.submit();
+    expect(authService.login).not.toHaveBeenCalled();
+  });
+
 });
