@@ -48,16 +48,19 @@ export class RegisterComponent {
   });
 
   constructor(private authService: AuthService,
-              private fb: FormBuilder,
-              private router: Router) {
+    private fb: FormBuilder,
+    private router: Router) {
   }
 
   public submit(): void {
+    if (this.form.invalid) {
+      return;
+    }
     const registerRequest = this.form.value as RegisterRequest;
     this.authService.register(registerRequest).subscribe({
-        next: (_: void) => this.router.navigate(['/login']),
-        error: _ => this.onError = true,
-      }
+      next: (_: void) => this.router.navigate(['/login']),
+      error: _ => this.onError = true,
+    }
     );
   }
 

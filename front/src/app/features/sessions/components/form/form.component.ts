@@ -47,6 +47,9 @@ export class FormComponent implements OnInit {
   }
 
   public submit(): void {
+    if (this.sessionForm?.invalid) {
+      return;
+    }
     const session = this.sessionForm?.value as Session;
 
     if (!this.onUpdate) {
