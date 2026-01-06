@@ -2,7 +2,14 @@
 
 describe('Session Form - Update', () => {
   it('should update an existing session', () => {
-
+    const sessionMock = {
+      id: 1,
+      email: 'test@test.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      admin: true,
+      token: 'fake-jwt-token',
+    };
     cy.intercept('GET', '/api/teacher', {
       body: [{ id: 1, firstName: 'Margot', lastName: 'Delahaye' }],
     }).as('getTeachers');
@@ -22,16 +29,13 @@ describe('Session Form - Update', () => {
       body: { id: 1 },
     }).as('updateSession');
 
-    cy.visit('/login');
+    cy.visit('/');
 
-    cy.intercept('POST', '/api/auth/login', {
-      body: {
-        id: 1,
-        username: 'userName',
-        firstName: 'firstName',
-        lastName: 'lastName',
-        admin: true,
-      },
+    cy.window().then((win) => {
+      win.localStorage.setItem(
+        'sessionInformation',
+        JSON.stringify(sessionMock)
+      );
     });
 
     cy.visit('/sessions/update/1');

@@ -1,16 +1,22 @@
 /// <reference types="cypress" />
 describe('Session Form - Security', () => {
   it('should redirect non-admin users to sessions list', () => {
-    cy.visit('/login');
+    const sessionMock = {
+      id: 1,
+      email: 'test@test.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      admin: false,
+      token: 'fake-jwt-token',
+    };
 
-    cy.intercept('POST', '/api/auth/login', {
-      body: {
-        id: 1,
-        username: 'userName',
-        firstName: 'firstName',
-        lastName: 'lastName',
-        admin: false,
-      },
+        cy.visit('/');
+    
+    cy.window().then((win) => {
+      win.localStorage.setItem(
+        'sessionInformation',
+        JSON.stringify(sessionMock)
+      );
     });
 
     // 2. forcer l'accès à la création
