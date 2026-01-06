@@ -12,6 +12,15 @@ export class SessionService {
 
   private isLoggedSubject = new BehaviorSubject<boolean>(this.isLogged);
 
+  constructor() {
+  const session = window.localStorage.getItem('sessionInformation');
+  if (session) {
+    this.sessionInformation = JSON.parse(session);
+    this.isLogged = true;
+    this.next();
+  }
+}
+
   public $isLogged(): Observable<boolean> {
     return this.isLoggedSubject.asObservable();
   }
