@@ -3,6 +3,15 @@
 describe('Login spec', () => {
   beforeEach(() => {
     cy.visit('/login');
+    cy.intercept('POST', '/api/auth/login', {
+      body: {
+        id: 1,
+        username: 'userName',
+        firstName: 'firstName',
+        lastName: 'lastName',
+        admin: true,
+      },
+    }).as('loginApi');
   });
 
   it('The submit button is disabled if the form is empty.', () => {
@@ -18,15 +27,7 @@ describe('Login spec', () => {
   });
 
   it('Login successfull', () => {
-    cy.intercept('POST', '/api/auth/login', {
-      body: {
-        id: 1,
-        username: 'userName',
-        firstName: 'firstName',
-        lastName: 'lastName',
-        admin: true,
-      },
-    });
+
     cy.get('input[formcontrolname=email]').type('yoga@studio.com');
     cy.get('input[formcontrolname=password]').type('test!1234');
     cy.get('button[type=submit]').should('not.be.disabled').click();
@@ -89,17 +90,6 @@ describe('Login spec', () => {
 
   it('Must validate the submit button, send the correct data, and redirect.', () => {
     cy.visit('/login');
-
-    // INTERCEPT AVANT TOUT !
-    cy.intercept('POST', '/api/auth/login', {
-      body: {
-        id: 1,
-        username: 'userName',
-        firstName: 'firstName',
-        lastName: 'lastName',
-        admin: true,
-      },
-    }).as('loginApi');
     cy.intercept('GET', '/api/session', []).as('session');
 
     // 1. Le bouton doit être désactivé si le formulaire est vide
