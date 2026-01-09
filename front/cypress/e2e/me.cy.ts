@@ -20,7 +20,6 @@ describe('Me Component (Profile)', () => {
   };
 
   beforeEach(() => {
-    cy.intercept('GET', '**/api/user/1*', { body: userMock }).as('getUser');
     cy.visit('/');
     cy.window().then((win) => {
       win.localStorage.setItem(
@@ -28,37 +27,35 @@ describe('Me Component (Profile)', () => {
         JSON.stringify(sessionMock)
       );
     });
+    cy.intercept('GET', '**/api/user/1*', { body: userMock }).as('getUser');
     cy.visit('/me');
     cy.wait('@getUser');
   });
 
   it('should display user information correctly', () => {
-    cy.intercept('GET', '**/api/user/1*', { body: userMock }).as('getUser');
-    cy.visit('/me');
-    cy.wait('@getUser');
     cy.contains('John').should('be.visible');
     cy.contains('DOE').should('be.visible');
     cy.contains('test@test.com').should('be.visible');
   });
 
   it('Go back when the Back button is clicked', () => {
-    // suppose que le bouton retour possède un sélecteur type [data-cy=back] ou autre
-    cy.go('back'); // Simule le bouton "retour" si pas de bouton dédié
-    // ou, si tu as un bouton :
-    // cy.get('[data-cy=back]').click();
-    // cy.url()... Vérifie que tu es revenu à la page précédente
+    cy.get('[data-cy=back]').click();
+    cy.url().then(url => {
+      cy.log('Redirected to:', url);
+    });
+    cy.url().should('match', /localhost:4200/);
   });
 
   it('Delete the account and display a snackbar.', () => {
+    cy.visit('/me');
+
     cy.intercept('DELETE', '**/api/user/1*', { statusCode: 200 }).as(
       'deleteUser'
     );
-    // suppose que tu as un bouton "Supprimer" avec un id ou data-cy
     cy.get('[data-cy=delete]').click();
     cy.wait('@deleteUser');
     cy.contains('Your account has been deleted').should('be.visible');
-    // Vérifie la redirection
-    cy.url().should('eq', Cypress.config().baseUrl + "/");
+    cy.url().should('match', new RegExp(`^${Cypress.config().baseUrl}/?$`));
   });
 
   it('Display an error if the deletion fails.', () => {

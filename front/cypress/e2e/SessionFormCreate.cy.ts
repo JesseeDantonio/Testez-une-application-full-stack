@@ -10,7 +10,7 @@ describe('Session Form - Create', () => {
       admin: true,
       token: 'fake-jwt-token',
     };
-    // 1. On mock la liste des profs (nécessaire pour le dropdown)
+
     cy.intercept('GET', '/api/teacher', {
       body: [
         { id: 1, firstName: 'Margot', lastName: 'Delahaye' },
@@ -18,7 +18,6 @@ describe('Session Form - Create', () => {
       ],
     }).as('getTeachers');
 
-    // 2. On mock la création de session
     cy.intercept('POST', '/api/session', {
       body: {
         id: 1,
@@ -38,12 +37,10 @@ describe('Session Form - Create', () => {
       );
     });
 
-    // 4. On va sur la page de création
     cy.visit('/sessions/create');
     cy.url().should('include', '/sessions/create');
     cy.wait('@getTeachers');
 
-    // 5. On remplit le formulaire
     cy.get('input[formControlName="name"]').type('Yoga Class');
     cy.get('input[formControlName="date"]').type('2024-05-20');
     cy.get('mat-select[formControlName="teacher_id"]')
@@ -55,12 +52,10 @@ describe('Session Form - Create', () => {
       'A great yoga session.'
     );
 
-    // 6. On soumet
     cy.get('button[type="submit"]').click();
 
-    // 7. Vérifications
     cy.wait('@createSession');
     cy.url().should('include', '/sessions');
-    cy.get('.mat-snack-bar-container').should('contain', 'Session created !'); // Vérifie le message
+    cy.get('.mat-snack-bar-container').should('contain', 'Session created !');
   });
 });
