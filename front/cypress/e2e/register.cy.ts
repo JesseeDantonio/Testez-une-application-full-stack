@@ -5,11 +5,11 @@ describe('Register spec', () => {
     cy.visit('/register');
   });
 
-  it('Le bouton submit est désactivé si le formulaire est vide', () => {
+  it('The submit button is disabled if the form is empty.', () => {
     cy.get('button[type="submit"]').should('be.disabled');
   });
 
-  it('Le bouton submit est désactivé si un champ requis manque', () => {
+  it('The submit button is disabled if a required field is missing', () => {
     cy.get('input[formControlName="firstName"]').type('John');
     cy.get('input[formControlName="lastName"]').type('Doe');
     cy.get('input[formControlName="email"]').type('john@doe.com');
@@ -20,7 +20,7 @@ describe('Register spec', () => {
     cy.get('button[type="submit"]').should('be.disabled');
   });
 
-  it('Le bouton submit est désactivé si email invalide', () => {
+  it('The submit button is disabled if email is invalid', () => {
     cy.get('input[formControlName="firstName"]').type('John');
     cy.get('input[formControlName="lastName"]').type('Doe');
     cy.get('input[formControlName="email"]').type('nope');
@@ -49,7 +49,7 @@ describe('Register spec', () => {
     cy.url().should('include', '/login');
   });
 
-  it('Permet de soumettre avec Entrée', () => {
+  it('Allows submission with the Enter key.', () => {
     cy.intercept('POST', '/api/auth/register', {
       statusCode: 200,
       body: {
@@ -68,7 +68,7 @@ describe('Register spec', () => {
     cy.url().should('include', '/login');
   });
 
-  it("Affiche une erreur si l'enregistrement échoue", () => {
+  it("Displays an error if the registration fails", () => {
     cy.intercept('POST', '/api/auth/register', { statusCode: 400 }).as(
       'registerFail'
     );
@@ -81,7 +81,7 @@ describe('Register spec', () => {
     cy.get('.error').should('contain', 'An error occurred');
   });
 
-  it('L’erreur disparait si on modifie un champ après une erreur', () => {
+  it('The error disappears when a field is modified after an error.', () => {
     cy.intercept('POST', '/api/auth/register', { statusCode: 400 }).as(
       'registerFail'
     );
@@ -97,7 +97,7 @@ describe('Register spec', () => {
     // cy.get('.error').should('not.exist');
   });
 
-  it('Vérifie le payload envoyé à l’API', () => {
+  it('Verify the payload sent to the API.', () => {
     cy.intercept('POST', '/api/auth/register').as('registerApi');
     cy.get('input[formControlName="firstName"]').type('Alice');
     cy.get('input[formControlName="lastName"]').type('Smith');
@@ -110,25 +110,5 @@ describe('Register spec', () => {
       email: 'alice@smith.com',
       password: 'superSecret123',
     });
-  });
-
-  it('Permet de soumettre avec Entrée', () => {
-    cy.intercept('POST', '/api/auth/register', {
-      statusCode: 200,
-      body: {
-        id: 1,
-        username: 'userName',
-        firstName: 'A',
-        lastName: 'B',
-        admin: false,
-      },
-    }).as('register');
-
-    cy.get('input[formControlName="firstName"]').type('Abc');
-    cy.get('input[formControlName="lastName"]').type('Def');
-    cy.get('input[formControlName="email"]').type('abc@def.com');
-    cy.get('input[formControlName="password"]').type('passeTest{enter}');
-    cy.wait('@register');
-    cy.url({ timeout: 10000 }).should('include', '/login');
   });
 });

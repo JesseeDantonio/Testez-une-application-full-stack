@@ -62,7 +62,7 @@ describe('Session Detail Spec', () => {
     cy.contains('DELAHAYE').should('be.visible');
     cy.contains('Delete').should('not.exist');
 
-    cy.get('button[mat-icon-button]').first().click();
+    cy.get('[data-cy=back]').click();
     // cy.url().should('include', '/sessions');
   });
 
