@@ -39,7 +39,7 @@ describe('Me Component (Profile)', () => {
   });
 
   it('Go back when the Back button is clicked', () => {
-    cy.get('[data-cy=back]').click();
+    cy.get('[id=back]').click();
     cy.url().then(url => {
       cy.log('Redirected to:', url);
     });
@@ -52,7 +52,7 @@ describe('Me Component (Profile)', () => {
     cy.intercept('DELETE', '**/api/user/1*', { statusCode: 200 }).as(
       'deleteUser'
     );
-    cy.get('[data-cy=delete]').click();
+    cy.get('[id=delete]').click();
     cy.wait('@deleteUser');
     cy.contains('Your account has been deleted').should('be.visible');
     cy.url().should('match', new RegExp(`^${Cypress.config().baseUrl}/?$`));
@@ -62,7 +62,7 @@ describe('Me Component (Profile)', () => {
     cy.intercept('DELETE', '**/api/user/1*', { statusCode: 500 }).as(
       'deleteUserFail'
     );
-    cy.get('[data-cy=delete]').click();
+    cy.get('[id=delete]').click();
     cy.wait('@deleteUserFail');
   });
 });
