@@ -9,6 +9,7 @@ Avant de commencer, assurez-vous d’avoir installé les logiciels suivants sur 
 - **Java Development Kit (JDK) :** Suivez les instructions ci-dessous pour installer le JDK.
 - **Apache Maven :** Installez [Maven](https://maven.apache.org/) pour construire et gérer les dépendances du projet.
 - **Node.js :** Installez [Node.js LTS](https://nodejs.org/en) pour installer les dépendances du Front-End.
+- **H2 :** est déjà installé et configuré pour les tests
 
 ## Configuration
 
@@ -56,6 +57,9 @@ Avant de commencer, assurez-vous d’avoir installé les logiciels suivants sur 
    Une fois le dépôt cloné, ajoutez le fichier `application.properties` dans le dossier `src/main/resources/` avec le contenu suivant :
 
 ```properties
+# ⚠️ Attention : 
+# Les identifiants de connexion fournis dans ce projet sont exclusivement réservés à un usage local, pour l'essai et la validation du projet.  
+# Ils ne doivent en aucun cas être utilisés en production ou pour des données sensibles.
 spring.datasource.url=jdbc:mysql://localhost:3306/test?allowPublicKeyRetrieval=true
 spring.datasource.username=user
 spring.datasource.password=123456
