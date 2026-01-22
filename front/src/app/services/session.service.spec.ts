@@ -18,13 +18,26 @@ describe('SessionService', () => {
     admin: true,
   };
 
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    // ⚠️ IMPORTANT : On ne fait PAS l'injection ici.
+    // On veut contrôler le moment exact de la création du service dans chaque test.
+  });
+
+  it('should be created', () => {
+    service = TestBed.inject(SessionService);
+    expect(service).toBeTruthy();
+  });
+
   it('should start with isLogged as false', () => {
+    service = TestBed.inject(SessionService); // Initialisation manuelle
     // Vérifie l'état initial
     expect(service.isLogged).toBe(false);
     expect(service.sessionInformation).toBeUndefined();
   });
 
   it('should log in user correctly', () => {
+    service = TestBed.inject(SessionService); // Initialisation manuelle
     // Action : Connexion
     service.logIn(mockSessionInfo);
 
@@ -34,6 +47,7 @@ describe('SessionService', () => {
   });
 
   it('should log out user correctly', () => {
+    service = TestBed.inject(SessionService); // Initialisation manuelle
     // Pré-requis : On connecte d'abord l'utilisateur
     service.logIn(mockSessionInfo);
     expect(service.isLogged).toBe(true);
@@ -46,22 +60,23 @@ describe('SessionService', () => {
     expect(service.sessionInformation).toBeUndefined();
   });
 
-    it('should keep data consistent in observable', (done) => {
+  it('should keep data consistent in observable', (done) => {
+    service = TestBed.inject(SessionService); // Initialisation manuelle
+    
     // Ce test vérifie que l'observable $isLogged() émet bien les changements
-    // Le BehaviorSubject émet toujours la valeur courante dès la souscription (ici false)
     let emissionCount = 0;
 
     service.$isLogged().subscribe((status) => {
       emissionCount++;
 
       if (emissionCount === 1) {
-        // 1ère émission : valeur par défaut
+        // 1ère émission : valeur par défaut (false)
         expect(status).toBe(false);
-      } 
+      }
       else if (emissionCount === 2) {
         // 2ème émission : après le logIn
         expect(status).toBe(true);
-      } 
+      }
       else if (emissionCount === 3) {
         // 3ème émission : après le logOut
         expect(status).toBe(false);
@@ -74,12 +89,22 @@ describe('SessionService', () => {
     service.logOut();
   });
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(SessionService);
-  });
+  it('should automatically log in if session information is in localStorage', () => {
+    // 1. On espionne le localStorage AVANT de créer le service
+    const getItemSpy = jest.spyOn(window.localStorage, 'getItem').mockReturnValue(JSON.stringify(mockSessionInfo));
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+    // 2. On injecte le service MAINTENANT. 
+    // Le constructeur se lance, appelle localStorage.getItem, et notre espion intercepte l'appel.
+    service = TestBed.inject(SessionService);
+
+    // 3. Vérifications
+    expect(getItemSpy).toHaveBeenCalledWith('sessionInformation');
+    expect(service.isLogged).toBe(true);
+    expect(service.sessionInformation).toEqual(mockSessionInfo);
+
+    // On vérifie aussi que l'observable a bien émis "true"
+    service.$isLogged().subscribe((isLogged) => {
+      expect(isLogged).toBe(true);
+    });
   });
 });

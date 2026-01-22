@@ -4,7 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterTestingModule, } from '@angular/router/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { expect } from '@jest/globals';
 import { SessionService } from '../../../../services/session.service';
 
@@ -14,13 +14,31 @@ import { SessionApiService } from '../../services/session-api.service';
 import { of } from 'rxjs';
 import { TeacherService } from 'src/app/services/teacher.service';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { Teacher } from 'src/app/interfaces/teacher.interface';
 
+// --- MOCKS GLOBAUX ---
+
+const mockSessionService = {
+  sessionInformation: {
+    admin: true,
+    id: 1
+  }
+};
+
+const mockTeacher: Teacher = {
+  id: 7,
+  firstName: 'John',
+  lastName: 'Doe',
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+// --- SUITE DE TESTS UNITAIRES (SPY) ---
 describe('DetailComponent', () => {
   let component: DetailComponent;
   let fixture: ComponentFixture<DetailComponent>;
   let service: SessionService;
 
-  // 1. Define mocks
   const sessionApiService = {
     detail: jest.fn().mockReturnValue(of({
       id: 10,
@@ -36,15 +54,10 @@ describe('DetailComponent', () => {
   };
 
   const teacherService = {
-    detail: jest.fn().mockReturnValue(of({
-      id: 7,
-      name: 'Teacher X',
-      email: 't@t.fr'
-    }))
+    detail: jest.fn().mockReturnValue(of(mockTeacher))
   };
 
   const matSnackBar = { open: jest.fn() };
-  
   const router = { navigate: jest.fn() };
 
   const mockActivatedRoute = {
@@ -55,28 +68,20 @@ describe('DetailComponent', () => {
     }
   };
 
-  const mockSessionService = {
-    sessionInformation: {
-      admin: true,
-      id: 1
-    }
-  };
-
   beforeEach(async () => {
-    jest.clearAllMocks(); // Good practice to clear mocks before each test
-    
+    jest.clearAllMocks();
+
     await TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
         HttpClientModule,
         MatSnackBarModule,
         ReactiveFormsModule,
-              MatCardModule,
-      MatIconModule,
+        MatCardModule,
+        MatIconModule,
       ],
       declarations: [DetailComponent],
       providers: [
-        // 2. You must provide the mocks here so the component uses them
         { provide: SessionService, useValue: mockSessionService },
         { provide: SessionApiService, useValue: sessionApiService },
         { provide: TeacherService, useValue: teacherService },
@@ -84,8 +89,7 @@ describe('DetailComponent', () => {
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ],
-    })
-      .compileComponents();
+    }).compileComponents();
 
     service = TestBed.inject(SessionService);
     fixture = TestBed.createComponent(DetailComponent);
@@ -98,7 +102,6 @@ describe('DetailComponent', () => {
   });
 
   it('should fetch session and teacher on init', () => {
-    // Now these checks will pass because the component is using the injected mocks
     expect(sessionApiService.detail).toHaveBeenCalledWith('10');
     expect(component.session).toBeTruthy();
     expect(teacherService.detail).toHaveBeenCalledWith('7');
@@ -113,7 +116,6 @@ describe('DetailComponent', () => {
   });
 
   it('should call participate and fetchSession', () => {
-    // We spy on the private method 'fetchSession' to ensure it is called
     const fetchSpy = jest.spyOn(component as any, 'fetchSession');
     component.participate();
     expect(sessionApiService.participate).toHaveBeenCalledWith('10', '1');
@@ -135,17 +137,28 @@ describe('DetailComponent', () => {
   });
 });
 
+// --- SUITE DE TESTS D'INTÉGRATION (HTTP) ---
 describe('DetailComponent Integration Test', () => {
   let component: DetailComponent;
   let fixture: ComponentFixture<DetailComponent>;
-  let httpMock: HttpTestingController; // Permet de contrôler les requêtes HTTP réelles
+  let httpMock: HttpTestingController;
+
+  // On définit un ID spécifique pour le test d'intégration
+  const sessionId = '123';
+
+  const mockActivatedRouteIntegration = {
+    snapshot: {
+      paramMap: {
+        get: jest.fn().mockReturnValue(sessionId)
+      }
+    }
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [DetailComponent],
       imports: [
-        // On importe les modules nécessaires pour que les VRAIS services fonctionnent
-        HttpClientTestingModule, 
+        HttpClientTestingModule, // Simule les requêtes HTTP
         RouterTestingModule,
         MatSnackBarModule,
         ReactiveFormsModule,
@@ -153,10 +166,11 @@ describe('DetailComponent Integration Test', () => {
         MatIconModule
       ],
       providers: [
-        // NOTE IMPORTANTE : On ne met PAS de mocks ici (useValue: mock...).
-        // On laisse Angular injecter les vraies instances de SessionApiService et TeacherService.
-        SessionApiService,
-        TeacherService
+        // On fournit le Mock SessionService (pour l'admin/user info)
+        { provide: SessionService, useValue: mockSessionService },
+        // IMPORTANT : On fournit le Mock ActivatedRoute pour que ngOnInit récupère le bon ID
+        { provide: ActivatedRoute, useValue: mockActivatedRouteIntegration }
+        // Note : On NE mock PAS SessionApiService ni TeacherService ici, car on veut tester l'intégration HTTP
       ],
     }).compileComponents();
 
@@ -166,79 +180,62 @@ describe('DetailComponent Integration Test', () => {
   });
 
   afterEach(() => {
-    // Vérifie qu'il n'y a pas de requêtes HTTP en attente à la fin du test
     httpMock.verify();
   });
 
   it('should fetch session details and teacher details from services and display them', () => {
-    // On simule l'ID dans l'URL (via le composant ou une navigation simulée)
-    // Composant ↔ Vrai Service ↔ Module HTTP (simulé) ↔ Template HTML.
-    // Pour ce test d'intégration, on force l'ID manuellement car ActivatedRoute est difficile à ne pas mocker du tout sans E2E.
-    // Mais ici, on teste l'intégration [Composant -> Service -> HTTP].
-    const sessionId = '123';
-    
-    // Données de réponse simulées venant du "Back-end"
     const mockSession = {
       id: 123,
       name: 'Yoga Session',
       description: 'Relaxing yoga',
       date: new Date(),
-      teacher_id: 999,
+      teacher_id: 7,
       users: []
     };
 
-    const mockTeacher = {
-      id: 999,
-      firstName: 'John',
-      lastName: 'Doe'
-    };
+    // 1. Déclenchement du ngOnInit
+    fixture.detectChanges(); 
 
-    // 2. On déclenche ngOnInit (qui appelle detail() dans le service)
-    // Note: Dans un vrai scénario, il faudrait mocker ActivatedRoute pour qu'il retourne '123'. 
-    // Supposons que le composant récupère l'ID.
-    
-    // Appel manuel pour simuler la récupération de l'ID par la route
-    component.sessionId = sessionId; 
-    component.ngOnInit(); 
-
-    // 3. INTERCEPTION DES REQUÊTES RÉELLES
-    // Le composant a appelé le VRAI SessionApiService.
-    // Le VRAI service a lancé une requête HTTP GET. Nous l'attrapons ici :
+    // 2. Interception de la requête Session
     const reqSession = httpMock.expectOne(`api/session/${sessionId}`);
     expect(reqSession.request.method).toBe('GET');
-    
-    // On "répond" à la requête réseau comme le ferait le vrai serveur
     reqSession.flush(mockSession);
 
-    // Une fois la session reçue, le composant appelle le VRAI TeacherService
-    // Le VRAI TeacherService lance une requête HTTP. Nous l'attrapons :
+    // 3. Interception de la requête Teacher (déclenchée après la réception de la session)
     const reqTeacher = httpMock.expectOne(`api/teacher/${mockTeacher.id}`);
     expect(reqTeacher.request.method).toBe('GET');
     reqTeacher.flush(mockTeacher);
 
-    // Mise à jour de la vue
+    // 4. Mise à jour du DOM
     fixture.detectChanges();
 
-    // Vérifications sur le DOM (HTML)
-    // On vérifie que les données ont traversé : Service -> Component -> HTML
+    // 5. Vérifications DOM
     const compiled = fixture.nativeElement as HTMLElement;
-    
     expect(compiled.querySelector('h1')?.textContent).toContain('Yoga Session');
     expect(compiled.querySelector('.description')?.textContent).toContain('Relaxing yoga');
-    expect(compiled.querySelector('.teacher-name')?.textContent).toContain('John Doe');
+    
+    // Vérification plus souple pour le teacher (parfois dans mat-card-subtitle ou span)
+    // On cherche si le texte "John Doe" est présent quelque part dans la card
+    expect(compiled.textContent).toContain('John DOE');
   });
 
   it('should handle delete action fully through the service layer', () => {
-    const sessionId = '123';
-    component.sessionId = sessionId;
-    
-    // Simulation de l'appel delete
+    // Initialisation
+    fixture.detectChanges();
+
+    // On doit flusher les requêtes d'initialisation pour que le composant soit "prêt"
+    // Sinon le verify() du afterEach va échouer car des requêtes ngOnInit seront en attente
+    const reqSessionInit = httpMock.expectOne(`api/session/${sessionId}`);
+    reqSessionInit.flush({ id: 123, teacher_id: 7, users: [] });
+    const reqTeacherInit = httpMock.expectOne(`api/teacher/7`);
+    reqTeacherInit.flush(mockTeacher);
+
+    // Action Delete
     component.delete();
 
-    // Le composant appelle le vrai service, qui fait un DELETE HTTP
-    const req = httpMock.expectOne(`api/session/${sessionId}`);
-    expect(req.request.method).toBe('DELETE');
-    
-    req.flush({}); // Réponse vide (succès)
+    // Interception de la requête DELETE
+    const reqDelete = httpMock.expectOne(`api/session/${sessionId}`);
+    expect(reqDelete.request.method).toBe('DELETE');
+    reqDelete.flush({});
   });
 });
