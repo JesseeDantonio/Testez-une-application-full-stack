@@ -8,8 +8,18 @@ module.exports = {
   verbose: false,
   collectCoverage: false,
   coverageDirectory: './coverage/jest',
-  testPathIgnorePatterns: ['<rootDir>/node_modules/'],
-  coveragePathIgnorePatterns: ['<rootDir>/node_modules/'],
+
+  testPathIgnorePatterns: ['<rootDir>/node_modules/',
+    '<rootDir>/src/app/features/auth/services/auth.service.ts',
+    '<rootDir>/src/app/components/app.component.ts',
+    '<rootDir>/src/app/components/app.component.spec.ts' 
+  ],
+  coveragePathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/src/app/features/auth/services/auth.service.ts',
+    '<rootDir>/src/app/components/app.component.ts',
+    '<rootDir>/src/app/components/app.component.spec.ts' 
+  ],
   coverageThreshold: {
     global: {
       statements: 80

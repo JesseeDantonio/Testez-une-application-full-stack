@@ -75,7 +75,7 @@ oc.app.jwtExpirationMs=86400000
 
 3. Lancez l’application via votre IDE ou en exécutant la commande suivante dans le répertoire du projet :
 
-4. Pour générer la couverture de code du back-end, exécutez la commande suivante : `mvn clean test`
+4. Pour générer la couverture de code du back-end, exécutez la commande suivante : `mvn clean test` ainsi que `mvn clean verify` pour l'exclusion des elements non utile.
 
 ## Rapports de couverture de code
 
